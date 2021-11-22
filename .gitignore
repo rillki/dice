@@ -1,3 +1,11 @@
+# custom
+bin/
+build/
+lib/
+__internal/
+.DS_Store
+.vscode
+
 # Compiled Object files
 *.o
 *.obj
