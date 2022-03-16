@@ -1,5 +1,5 @@
-<img src="imgs/dice.png" width="64" height="64" align="left"></img>
-# Dice
+<img src="imgs/sun.png" width="64" height="64" align="left"></img>
+# Eonium
 
 
 
