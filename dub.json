@@ -1,0 +1,11 @@
+{
+	"authors": [
+		"rillki"
+	],
+	"copyright": "Copyright © 2022, rillki",
+	"description": "Eonium - A simple to use machine learning library for D.",
+	"license": "MIT",
+	"name": "eonium",
+    "targetType": "library",
+    "targetPath": "lib"
+}
