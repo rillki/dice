@@ -11,9 +11,8 @@ module eonium.la.mat;
     - Identity
 +/
 
-import std.algorithm: copy;
-import std.traits: isFloatingPoint;
 import std.math: abs, sqrt, mround = round;
+import std.traits: isFloatingPoint;
 
 alias Matrixf = Matrix!float;
 alias Matrixd = Matrix!double;
