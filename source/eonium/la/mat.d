@@ -8,16 +8,17 @@ module eonium.la.mat;
         - resize
         - t (inplace transposition)
         - transposed (returns a transposed matrix)
-    - matDiagonal
+    - Identity
 +/
 
 import std.algorithm: copy;
 import std.traits: isFloatingPoint;
+import std.math: abs, sqrt, mround = round;
 
 alias Matrixf = Matrix!float;
 alias Matrixd = Matrix!double;
-alias matDiagonalf = matDiagonal!float;
-alias matDiagonald = matDiagonal!double;
+alias Identityf = Identity!float;
+alias Identityd = Identity!double;
 
 struct Matrix(T = float) if(isFloatingPoint!T) {
     private {
@@ -107,7 +108,7 @@ struct Matrix(T = float) if(isFloatingPoint!T) {
     bool isSquare() const {
         return (r == c);
     }
-    
+
     /// Returns a copy of a matrix
     Matrix!T dup() const {
         return Matrix!T(this);
@@ -179,8 +180,10 @@ struct Matrix(T = float) if(isFloatingPoint!T) {
     }
     
     /// Matrix inplace transposition
-    ref Matrix!T t() {
+    ref Matrix!T transpose() {
         // transpose the matrix (from RosettaCode, the C version, uses permutations)
+        // RosettaCode: http://www.rosettacode.org/wiki/Matrix_transposition#C
+        // Wiki article on permutations: https://en.wikipedia.org/wiki/In-place_matrix_transposition
         for(size_t start = 0; start < r * c; start++) {
             size_t next = start;
             size_t i = 0;
@@ -213,11 +216,115 @@ struct Matrix(T = float) if(isFloatingPoint!T) {
         return this;
     }
 
-    /// Returns a transposed matrix
-    Matrix!T transposed() const {
-        return this.dup().t();
+    /// Inplace matrix inverse
+    /// Notes: doesn't do anything if matrix is singular (from RosettaCode, the C version, using Gauss-Jordan algorithm)
+    ref Matrix!T inverse() in(r == c) {
+        // RosettaCode: http://www.rosettacode.org/wiki/Gauss-Jordan_matrix_inversion#C
+        auto mat = Identity!T(r, c, 1);
+
+        // Frobenius norm of a
+        T f = 0;
+        T g = 0;
+        for(size_t i = 0; i < r; ++i) {
+            for(size_t j = 0; j < r; ++j) {
+                g = data[j + i * r];
+                f += g * g;
+            }
+        }
+
+        f = sqrt(f);
+        T tol = f * 2.2204460492503131e-016;
+
+        // main loop
+        for (size_t k = 0; k < r; ++k) {
+            // find pivot
+            size_t p = k;
+            f = abs(data[k + k * r]);
+            for (size_t i = k + 1; i < r; ++i) {
+                g = abs(data[k + i * r]);
+                if (g > f) {
+                    f = g;
+                    p = i;
+                }
+            }
+
+            // matrix is singluar
+            if (f < tol) {
+                return this;
+            }
+
+            // swap rows
+            if (p != k) {
+                for (size_t j = k; j < r; ++j) {
+                    f = data[j + k * r];
+                    data[j + k * r] = data[j + p * r];
+                    data[j + p * r] = f;
+                }
+
+                for (size_t j = 0; j < r; ++j) {
+                    f = mat[k][j];
+                    //f = b[j+k*n];
+                    //b[j+k*n] = b[j+p*n];
+                    //b[j+p*n] = f;
+                    mat[k][j] = mat[p][j];
+                    mat[p][j] = f;
+                }
+            }
+
+            // scale row so pivot is 1
+            f = 1.0 / data[k + k * r];
+            for (size_t j = k; j < r; ++j) {
+                data[j + k * r] *= f;
+            }
+
+            for (size_t j = 0; j < r; ++j) {
+                mat[k][j] *= f;
+                //b[j+k*n] *= f;
+            }
+
+            // Subtract to get zeros
+            for (size_t i = 0; i < r; ++i) {
+                if (i == k) {
+                    continue;
+                }
+
+                f = data[k + i * r];
+                for (size_t j = k; j < r; ++j) {
+                    data[j + i * r] -= data[j + k * r] * f;
+                }
+
+                for (size_t j = 0; j < r; ++j) {
+                    mat[i][j] -= mat[k][j] * f;
+                    //b[j+i*n] -= b[j+k*n] * f;
+                }
+            }
+        }
+
+        // update matrix
+        this = mat;
+
+        return this;
     }
 
+    /++ 
+    Inplace-round matrix elements
+    
+    Params:
+        n = number of digits after the floating point '.'
+    
+    Returns: a rounded Matrix!T
+    +/
+    ref Matrix!T round(const size_t n = 2) {
+        immutable scaler = 10^^n;
+        foreach(ref d; data) {
+            d *= scaler;
+            d = mround(d);
+            d /= scaler;
+        }
+
+        return this;
+    }
+    
     private {
         /// Updates slice pointers
         void updateSlices() {
@@ -231,7 +338,7 @@ struct Matrix(T = float) if(isFloatingPoint!T) {
 }
 
 /++
-Creates a diagonal matrix with custom value filled along the diagonal (default: 1)
+Creates an identity matrix with custom value filled along the diagonal (default: 1)
 
 Params:
     rows = number of rows
@@ -240,7 +347,7 @@ Params:
 
 Returns: Matrix!T
 +/
-Matrix!T matDiagonal(T = float)(const size_t r, const size_t c, const T value = 1) if(isFloatingPoint!T) in (r && c) {
+Matrix!T Identity(T = float)(const size_t r, const size_t c, const T value = 1) if(isFloatingPoint!T) in (r && c) {
     auto mat = Matrix!T(r, c, 0);
     for(size_t i = 0; i < (r < c ? r : c); i++) {
         mat[i][i] = value;
@@ -275,13 +382,13 @@ unittest {
     assert(matf == [[-15, 2], [3, 4]]);
     
     // diagonal
-    auto diag = matDiagonal!float(3, 4, 1);
+    auto diag = Identity!float(3, 4, 1);
     assert(diag == [[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0]]);
     
-    auto diag1 = matDiagonald(3, 4, 1);
+    auto diag1 = Identityd(3, 4, 1);
     assert(diag1 == [[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0]]);
     
-    auto diag2 = matDiagonalf(2, 2, 3);
+    auto diag2 = Identityf(2, 2, 3);
     assert(diag2 == [[3, 0], [0, 3]]);
 
     // resize
@@ -333,11 +440,24 @@ unittest {
     auto m3 = m1 * m2; assert(m3 == [[11, 8, -15], [13, 34, -30], [-12, -46, 35]]);
     
     // matrix transposition
-    auto m1T = m1.transposed; assert(m1T == [[2, -5, 9], [3, 6, -7]]);
-    m2.t; assert(m2 == [[1, 3], [-2, 4], [0, -5]]);
+    auto m1T = m1.dup().transpose(); assert(m1T == [[2, -5, 9], [3, 6, -7]]);
+    m2.transpose; assert(m2 == [[1, 3], [-2, 4], [0, -5]]);
+
+    // inverse
+    auto m4 = Matrixf([
+        [-1, -2, 3, 2],
+        [-4, -1, 6, 2],
+        [7, -8, 9, 1],
+        [1, -2, 1, 3]
+    ]);
+    
+    auto m4Inv = m4.dup().inverse(); assert(m4Inv != m4);
+    assert(m4.inverse.inverse == m4);
+    
+    // identity inverse
+    auto I = Identityf(3, 3);
+    assert(I.inverse == I);
 }
-
-
 
 
 
