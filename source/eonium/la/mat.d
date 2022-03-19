@@ -262,9 +262,6 @@ struct Matrix(T = float) if(isFloatingPoint!T) {
 
                 for (size_t j = 0; j < r; ++j) {
                     f = mat[k][j];
-                    //f = b[j+k*n];
-                    //b[j+k*n] = b[j+p*n];
-                    //b[j+p*n] = f;
                     mat[k][j] = mat[p][j];
                     mat[p][j] = f;
                 }
@@ -278,7 +275,6 @@ struct Matrix(T = float) if(isFloatingPoint!T) {
 
             for (size_t j = 0; j < r; ++j) {
                 mat[k][j] *= f;
-                //b[j+k*n] *= f;
             }
 
             // Subtract to get zeros
@@ -294,7 +290,6 @@ struct Matrix(T = float) if(isFloatingPoint!T) {
 
                 for (size_t j = 0; j < r; ++j) {
                     mat[i][j] -= mat[k][j] * f;
-                    //b[j+i*n] -= b[j+k*n] * f;
                 }
             }
         }

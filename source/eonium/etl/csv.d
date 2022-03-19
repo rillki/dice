@@ -17,7 +17,7 @@ import std.algorithm: map, each, joiner, remove, among;
 Read a CSV file into memory
 Params:
     filename = path to the file
-    sep = seperator, (default: ';')
+    sep = seperator (default: ';')
     header = does CSV contain a header (default: true)
     preallocate = pre-allocate N number of rows (default: 100)
 Returns: 'string[][]' upon success, 'null' upon failure
