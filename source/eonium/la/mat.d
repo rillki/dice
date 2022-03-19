@@ -28,16 +28,16 @@ struct Matrix(T = float) if(isFloatingPoint!T) {
     alias m this;
     
     /// Construct matrix from 2d array
-    this(const T[][] arr) in (arr.length && arr[0].length) {
+    this(const T[][] arr) in (arr !is null && arr.length && arr[0].length) {
         // save matrix size
         r = arr.length;
         c = arr[0].length;
-
+    
         // copy matrix data
         data.length = r * c;
         foreach(i, row; arr) {
             foreach(j, val; row) {
-                data[i * r + j] = val;
+                data[i * c + j] = val;
             }
         }
 
@@ -46,7 +46,7 @@ struct Matrix(T = float) if(isFloatingPoint!T) {
     }
 
     /// Construct matrix from 1d array
-    this(const T[] arr, const size_t r, const size_t c) in(array !is null && array.length && r && c) {
+    this(const T[] arr, const size_t r, const size_t c) in(arr !is null && arr.length && r && c && arr.length <= r * c) {
         // save matrix size
         this.r = r;
         this.c = c;
@@ -124,7 +124,7 @@ struct Matrix(T = float) if(isFloatingPoint!T) {
     }
     
     /// Element wise value operations (+=, -=, *=, /=)
-    ref Matrix!T opOpAssign(string op)(const T value) if (op == "+" || op == "-" || op == "*" || op == "/") {
+    ref Matrix!T opOpAssign(string op)(const T value) if(op == "+" || op == "-" || op == "*" || op == "/") {
         mixin("data[] " ~ op ~ "= value;");
         return this;
     }
@@ -141,32 +141,36 @@ struct Matrix(T = float) if(isFloatingPoint!T) {
 
     /+ ---------- MATRIX-WISE OPERATIONS ---------- +/
     
-    /+/// Matrix operations (+, -, *)
-    Matrix!T opBinary(string op)(const Matrix!T rhs) 
-        if(op == "+" || op == "-" || op == "*") 
-        in(((op == "+" || op == "-") && rows == rhs.rows && cols == rhs.cols) || (op == "*" && rows == rhs.cols)) 
-    {
-        auto result = this.dup();
-
-        if(op == "+" || op == "-") {
-            foreach(i, ref row; result) {
-                foreach(j, ref entry; row) {
-                    mixin("entry " ~ op ~ "= rhs[i][j];");
-                }
-            }    
-        } else {
-            //...
-        }
-
-        return result;
-    }
-    
-    /// Matrix operations (+=, -=)
-    ref Matrix!T opOpAssign(string op)(const Matrix!T mat) if (op == "+" || op == "-") {
+    /// Matrix-wise operations (+=, -=)
+    ref Matrix!T opOpAssign(string op)(const Matrix!T mat) if(op == "+" || op == "-") in(this.r == mat.rows && this.c == mat.cols) {
         mixin("data[] " ~ op ~ "= mat.array[];");
         return this;
-    }+/
+    } 
+    
+    /// Matrix-wise operations (*=)
+    ref Matrix!T opOpAssign(string op)(const Matrix!T mat) if(op == "*") in(this.r == mat.cols) {
+        auto ret = Matrix!T(this.r, mat.cols, 0);
+        
+        // matrix multiplication
+        foreach(i; 0..r) {
+            foreach(j; 0..mat.cols) {
+                foreach(k; 0..mat.rows) {
+                    ret[i][j] += this[i][k] * mat[k][j];
+                }
+            }
+        }
+        
+        // update matrix
+        this = ret;
 
+        return this;
+    }
+
+    /// Matrix-wise operations (+, -, *)
+    Matrix!T opBinary(string op)(const Matrix!T mat) const if(op == "+" || op == "-" || op == "*") {
+        return this.dup().opOpAssign!op(mat);
+    }
+    
     private {
         /// Updates slice pointers
         void updateSlices() {
@@ -261,20 +265,25 @@ unittest {
     diag = diag - 1;       assert(diag == [[2, 3], [3, 3]]);
     diag = diagCopy * 0.5; assert(diag == [[0.5, 1.0], [1.0, 1.0]]);
     diag = 3 * diag;       assert(diag == [[1.5, 3.0], [3.0, 3.0]]);
-
+    
     // ---- MATRIX-WISE OPERATIONS ---
 
-    /+// +=, -=, *=
-    diag += diag; assert(diag == [[2, 4], [4, 4]]);
-    diag -= diag; assert(diag == [[0, 0], [0, 0]]);
-    assert(diag.isZero());
+    // +=, -=
+    diag += diag; assert(diag == [[3, 6], [6, 6]]);
+    diag -= diag; assert(diag.isZero());
     
-    // +, -, *
-    diag++;
-    diag = diag + diag; assert(diag == [[2, 2], [2, 2]]);
-    diag2.resize(2, 2);
-    diag = diag + diag2; assert(diag == [[5, 2], [2, 5]]);
-    +/
+    // *=
+    diag += diagCopy; assert(diag == [[1, 2], [2, 2]]);
+    diag *= diag;     assert(diag == [[5, 6], [6, 8]]);
+    
+    // +, -
+    diag = diag + diagCopy; assert(diag == [[6, 8], [8, 10]]);
+    diag = diagCopy - diag; assert(diag == [[-5, -6], [-6, -8]]);
+    
+    // *
+    auto m1 = Matrixf([[2, 3], [-5, 6], [9, -7]]);
+    auto m2 = Matrixf([[1, -2, 0], [3, 4, -5]]);
+    auto m3 = m1 * m2; assert(m3 == [[11, 8, -15], [13, 34, -30], [-12, -46, 35]]);
 }
 
 
