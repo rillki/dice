@@ -6,6 +6,8 @@ module eonium.la.mat;
         - Matrix: from size (rows, cols)
         - dup
         - resize
+        - t (inplace transposition)
+        - transposed (returns a transposed matrix)
     - matDiagonal
 +/
 
@@ -101,6 +103,11 @@ struct Matrix(T = float) if(isFloatingPoint!T) {
         return zero;
     }
     
+    /// Checks if matrix is a square matrix
+    bool isSquare() const {
+        return (r == c);
+    }
+    
     /// Returns a copy of a matrix
     Matrix!T dup() const {
         return Matrix!T(this);
@@ -171,6 +178,46 @@ struct Matrix(T = float) if(isFloatingPoint!T) {
         return this.dup().opOpAssign!op(mat);
     }
     
+    /// Matrix inplace transposition
+    ref Matrix!T t() {
+        // transpose the matrix (from RosettaCode, the C version, uses permutations)
+        for(size_t start = 0; start < r * c; start++) {
+            size_t next = start;
+            size_t i = 0;
+
+            do {
+                i++;
+                next = (next % r) * c + next / r;
+            } while (next > start);
+
+            if(next < start || i == 1) {
+                continue;
+            }
+
+            immutable T tmp = data[next = start];
+            do {
+                i = (next % r) * c + next / r;
+                data[next] = (i == start) ? tmp : data[i];
+                next = i;
+            } while (next > start);
+        }
+
+        // update matrix size
+        immutable tmp = r;
+        r = c;
+        c = tmp;
+
+        // update slices pointers
+        updateSlices();
+
+        return this;
+    }
+
+    /// Returns a transposed matrix
+    Matrix!T transposed() const {
+        return this.dup().t();
+    }
+
     private {
         /// Updates slice pointers
         void updateSlices() {
@@ -284,6 +331,10 @@ unittest {
     auto m1 = Matrixf([[2, 3], [-5, 6], [9, -7]]);
     auto m2 = Matrixf([[1, -2, 0], [3, 4, -5]]);
     auto m3 = m1 * m2; assert(m3 == [[11, 8, -15], [13, 34, -30], [-12, -46, 35]]);
+    
+    // matrix transposition
+    auto m1T = m1.transposed; assert(m1T == [[2, -5, 9], [3, 6, -7]]);
+    m2.t; assert(m2 == [[1, 3], [-2, 4], [0, -5]]);
 }
 
 
