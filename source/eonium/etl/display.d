@@ -30,7 +30,7 @@ string display(T = string)(const T[][] data, const size_t[2] rows = [0, 10], con
 {
     // prepare variables for slicing
     immutable r1 = rows[0];
-    immutable r2 = (rows[1] < data.length ? rows[1] : data.length);
+    immutable r2 = (rows[1] != 0 && rows[1] < data.length ? rows[1] : data.length);
     immutable c1 = cols[0];
     immutable c2 = (cols[1] != 0 && cols[1] < data[0].length ? cols[1] : data[0].length);
     
@@ -47,7 +47,7 @@ string display(T = string)(const T[][] data, const size_t[2] rows = [0, 10], con
     
     // calculates the maximum element-wise padding of the array (the length of the widest array element)
     string calcPadding(S)(S arr) {
-        return arr.map!(a => a.length + 2 * totalColPadding - totalRowPadding)  // get elements length (adjusted with padding)
+        return arr.map!(a => a.length + totalColPadding + totalRowPadding)  // get elements length (adjusted with padding)
             .fold!max                   // find max length
             .to!string;                 // convert it to string
     }
@@ -111,8 +111,11 @@ unittest {
 
     // display from csv #2
     auto csvData2 = "data/csv/test_stud.csv".csvRead;
-    auto str = csvData2.display([0, 10], [0, 13], false);
+    auto str = csvData2.display([0, 0], [0, 0], false); // display all rows and cols
     //str.writeln;
+
+    auto d = "data/csv/2016.csv".csvRead(",");
+    //d.display([0, 0], [0, 0]); // display all rows and cols
 }
 
 
