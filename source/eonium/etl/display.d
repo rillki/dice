@@ -16,10 +16,16 @@ import std.algorithm: map, fold, max;
 Pretty-prints a 2d array to terminal
 
 Params:
+    data = 2d array
+    rows = row range to display [from, to] (default: [0, 10])
+    cols = column range to display [from, to] (default: [0, max])
+    print = print the result to terminal (default: true)
 
 Returns: a formatted string of data in table format
+
+Notes: if rows and cols range are out-of-bounds, then the max array length is used instead for both rows and columns.
 +/
-string display(T = string)(const T[][] data, const size_t[2] rows = [0, 10], const size_t[2] cols = [0, 0], const bool getstr = false) 
+string display(T = string)(const T[][] data, const size_t[2] rows = [0, 10], const size_t[2] cols = [0, 0], const bool print = true) 
     in(data !is null && data.length && data[0].length) 
 {
     // prepare variables for slicing
@@ -73,12 +79,11 @@ string display(T = string)(const T[][] data, const size_t[2] rows = [0, 10], con
         ~ format("dim(dataframe): [ %" ~ totalRowPadding.to!string ~ "s x %" ~ totalColPadding.to!string ~ "s ]\n", data.length, data[0].length)
         ~ "\n";
 
-    // return formatted string
-    if(getstr) {
-        return fmt;
+    // print the formatted string
+    if(print) {
+        fmt.writeln; 
     }
 
-    fmt.writeln;
     return fmt;
 }
 
@@ -106,7 +111,7 @@ unittest {
 
     // display from csv #2
     auto csvData2 = "data/csv/test_stud.csv".csvRead;
-    auto str = csvData2.display([0, 10], [0, 13], true);
+    auto str = csvData2.display([0, 10], [0, 13], false);
     //str.writeln;
 }
 
