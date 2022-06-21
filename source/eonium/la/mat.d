@@ -6,8 +6,8 @@ module eonium.la.mat;
         - Matrix: from size (rows, cols)
         - dup
         - resize
-        - t (inplace transposition)
-        - transposed (returns a transposed matrix)
+        - transpose
+        - inverse
     - Identity
 +/
 
@@ -114,12 +114,39 @@ struct Matrix(T = float) if(isFloatingPoint!T) {
     }
     
     /// Resizes the matrix to (rows, cols)
-    void resize(const size_t r, const size_t c) in (r && c) {
-        this.r = r; 
-        this.c = c;
+    //void resize(const size_t r, const size_t c) in (r && c) {
+    //    this.r = r;
+    //    this.c = c;
         
-        data.length = this.r * this.c;
-        updateSlices();
+    //    data.length = this.r * this.c;
+    //    updateSlices();
+    //}
+
+    /++ 
+    Resize matrix
+    
+    Params:
+        r = rows
+        c = columns
+        stable = keep values position (default: false)
+    +/
+    void resize(const size_t r, const size_t c, const bool stable = false) in (r && c) {
+        if(stable) {
+            auto mcopy = Matrix!T(r, c);
+            foreach(i; 0..mcopy.rows) {
+                foreach(j; 0..mcopy.cols) {
+                    mcopy[i][j] = this[i][j];
+                }
+            }
+
+            this = mcopy;
+        } else {
+            this.r = r;
+            this.c = c;
+            
+            data.length = this.r * this.c;
+            updateSlices();
+        }
     }
 
     /+ ---------- ELEMENT-WISE OPERATIONS ---------- +/
@@ -301,7 +328,7 @@ struct Matrix(T = float) if(isFloatingPoint!T) {
     }
 
     /++ 
-    Inplace-round matrix elements
+    Inplace round matrix elements
     
     Params:
         n = number of digits after the floating point '.'
@@ -451,6 +478,16 @@ unittest {
     // identity inverse
     auto I = Identityf(3, 3);
     assert(I.inverse == I);
+
+    // resize(stable = true)
+    auto m4dup = m4.dup();
+
+    m4.resize(3, 2);
+    assert(m4.rows == 3 && m4.cols == 2);
+
+    m4dup.resize(3, 2, true);
+    assert(m4dup.rows == 3 && m4dup.cols == 2);
+    assert(m4dup.round() == [[-1, -2], [-4, -1], [7, -8]]);
 }
 
 
