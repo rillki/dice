@@ -111,10 +111,10 @@ unittest {
 
     // display from csv #2
     auto csvData2 = "data/csv/test_stud.csv".csvRead;
-    auto str = csvData2.display([0, 0], [0, 0], false); // display all rows and cols
+    auto str = csvData2.display([0, 0], [0, 6], false); // display all rows and first 6 cols
     //str.writeln;
 
-    auto d = "data/csv/2016.csv".csvRead(",");
+    //auto d = "data/csv/2016.csv".csvRead(",");
     //d.display([0, 0], [0, 0]); // display all rows and cols
 }
 
