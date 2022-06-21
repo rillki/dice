@@ -62,7 +62,7 @@ string display(T = string)(const T[][] data, const size_t[2] rows = [0, 10], con
     foreach(i; c1..c2) {
         fmt ~= format("%" ~ padding[i] ~ "s%4s", i, " ");
     }
-    fmt ~= "\n";
+    fmt ~= "\n\n";
 
     // format row index and the data itself
     foreach(i, row; df) {
