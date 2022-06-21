@@ -13,6 +13,7 @@ module eonium.la.mat;
 
 import std.math: abs, sqrt, mround = round;
 import std.traits: isFloatingPoint;
+import std.algorithm.searching: canFind;
 
 alias Matrixf = Matrix!float;
 alias Matrixd = Matrix!double;
@@ -112,15 +113,6 @@ struct Matrix(T = float) if(isFloatingPoint!T) {
     Matrix!T dup() const {
         return Matrix!T(this);
     }
-    
-    /// Resizes the matrix to (rows, cols)
-    //void resize(const size_t r, const size_t c) in (r && c) {
-    //    this.r = r;
-    //    this.c = c;
-        
-    //    data.length = this.r * this.c;
-    //    updateSlices();
-    //}
 
     /++ 
     Resize matrix
@@ -146,6 +138,31 @@ struct Matrix(T = float) if(isFloatingPoint!T) {
             
             data.length = this.r * this.c;
             updateSlices();
+        }
+    }
+
+    /++ FIXME:
+    Drops matrix rows and columns
+    
+    Params:
+        indexes = index number
+        axis = { 0: rows, 1: cols } (default: 0)
+    +/
+    void drop(const size_t[] indexes, const size_t axis = 0) in (indexes !is null) {
+        if(axis == 0) {
+            auto mcopy = Matrix!T(r - indexes.len gth, this.cols);
+
+            //size_t offset = 0;
+            //foreach(i; 0..this.rows) {
+            //    foreach(j; 0..this.cols) {
+            //        if(indexes.canFind(i)) { continue; }
+            //        mcopy[i - offset][j] = this[i][j];
+            //    }
+            //}
+            
+            this = mcopy;
+        } else {
+
         }
     }
 
@@ -488,6 +505,17 @@ unittest {
     m4dup.resize(3, 2, true);
     assert(m4dup.rows == 3 && m4dup.cols == 2);
     assert(m4dup.round() == [[-1, -2], [-4, -1], [7, -8]]);
+
+    // drop rows
+    auto m5 = Matrixf([
+        [-1, -2, 3, 2],
+        [-4, -1, 6, 2],
+        [7, -8, 9, 1],
+        [1, -2, 1, 3]
+    ]);
+    m5.writeln;
+    auto mdrop = m5.dup; mdrop.drop([0]);
+    mdrop.writeln;
 }
 
 
