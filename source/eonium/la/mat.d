@@ -141,29 +141,46 @@ struct Matrix(T = float) if(isFloatingPoint!T) {
         }
     }
 
-    /++ FIXME:
+    /++
     Drops matrix rows and columns
     
     Params:
         indexes = index number
         axis = { 0: rows, 1: cols } (default: 0)
     +/
-    void drop(const size_t[] indexes, const size_t axis = 0) in (indexes !is null) {
+    void drop(const size_t[] indexes, const bool axis = 0) in (indexes !is null) {
+        Matrix!T mat;
+        
+        // dropping rows
         if(axis == 0) {
-            auto mcopy = Matrix!T(r - indexes.len gth, this.cols);
+            // create a new empty matrix
+            mat = Matrix!T(this.rows - indexes.length, this.cols);
 
-            //size_t offset = 0;
-            //foreach(i; 0..this.rows) {
-            //    foreach(j; 0..this.cols) {
-            //        if(indexes.canFind(i)) { continue; }
-            //        mcopy[i - offset][j] = this[i][j];
-            //    }
-            //}
+            size_t offset = 0;
+            foreach(i; 0..this.rows) {
+                // drop rows
+                if(indexes.canFind(i)) { offset++; continue; }
+                
+                // copy rows that we don't drop
+                mat[i - offset] = this[i];
+            }
+        } else { // droping rows
+            // create a new empty matrix
+            mat = Matrix!T(this.rows, this.cols - indexes.length);
             
-            this = mcopy;
-        } else {
-
+            foreach(i; 0..this.rows) {
+                size_t offset = 0;
+                foreach(j; 0..this.cols) {
+                    // drop columns
+                    if(indexes.canFind(j)) { offset++; continue; }
+                    // copy column values that we don't drop
+                    mat[i][j - offset] = this[i][j];
+                }
+            }
         }
+        
+        // save it
+        this = mat;
     }
 
     /+ ---------- ELEMENT-WISE OPERATIONS ---------- +/
@@ -513,10 +530,19 @@ unittest {
         [7, -8, 9, 1],
         [1, -2, 1, 3]
     ]);
-    m5.writeln;
-    auto mdrop = m5.dup; mdrop.drop([0]);
-    mdrop.writeln;
+    
+    auto mdropRow = m5.dup; mdropRow.drop([0, 2]);
+    assert(mdropRow == [[-4, -1, 6, 2], [1, -2, 1, 3]]);
+
+    // ensure that m5 value does not change when mdrop is modified
+    mdropRow[0][0] = 153;
+    assert(m5[1][0] == -4);
+
+    // drop columns
+    auto mdropCol = mdropRow.dup; mdropCol.drop([2, 3], 1);
+    assert(mdropCol == [[153, -1], [1, -2]].to!(float[][]));
 }
+
 
 
 
