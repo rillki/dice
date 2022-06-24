@@ -6,8 +6,10 @@ module eonium.la.mat;
         - Matrix: from size (rows, cols)
         - dup
         - resize
+        - drop
         - transpose
         - inverse
+        - round
     - Identity
 +/
 
@@ -379,7 +381,7 @@ struct Matrix(T = float) if(isFloatingPoint!T) {
 
         return this;
     }
-    
+
     private {
         /// Updates slice pointers
         void updateSlices() {
@@ -541,6 +543,25 @@ unittest {
     // drop columns
     auto mdropCol = mdropRow.dup; mdropCol.drop([2, 3], 1);
     assert(mdropCol == [[153, -1], [1, -2]].to!(float[][]));
+    
+    // min
+    auto min = m5.array.minElement;
+    assert(min == -8);
+
+    // max
+    auto max = m5.array.maxElement;
+    assert(max == 9);
+
+    // min row at 0
+    auto minRow = m5[0].minElement;
+    assert(minRow == -2);
+
+    // max row at 1
+    auto maxRow = m5[1].maxElement;
+    assert(maxRow == 6);
+
+    // min, max, etc... columns: it is the same thing
+    // transpose the matrix and apply the same functions
 }
 
 
