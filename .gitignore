@@ -5,6 +5,8 @@ lib/
 __internal/
 .DS_Store
 .vscode
+.venv
+venv/
 
 # Compiled Object files
 *.o

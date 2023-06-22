@@ -1,11 +1,11 @@
 {
-	"authors": [
-		"rillki"
-	],
-	"copyright": "Copyright © 2022, rillki",
-	"description": "A simple to use machine learning library for D.",
-	"license": "MIT",
-	"name": "eonium",
+    "authors": [
+        "rillki"
+    ],
+    "copyright": "Copyright © 2023, rillki",
+    "description": "A simple to use deep learning library for D.",
+    "license": "MIT",
+    "name": "lotus",
     "targetType": "library",
     "targetPath": "lib"
 }
