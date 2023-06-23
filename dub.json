@@ -1,11 +1,15 @@
 {
-    "authors": [
-        "rillki"
-    ],
-    "copyright": "Copyright © 2023, rillki",
-    "description": "A simple to use deep learning library for D.",
-    "license": "MIT",
-    "name": "lotus",
-    "targetType": "library",
-    "targetPath": "lib"
+	"authors": [
+		"rillki"
+	],
+	"copyright": "Copyright © 2023, rillki",
+	"dependencies": {
+		"dcv": "~>0.3.0",
+		"ffmpeg-d": "~>4.4.1"
+	},
+	"description": "A simple to use deep learning library for D.",
+	"license": "MIT",
+	"name": "lotus",
+	"targetPath": "bin",
+	"targetType": "executable"
 }
